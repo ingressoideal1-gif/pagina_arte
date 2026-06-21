@@ -280,6 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSavePage.addEventListener('click', async (e) => {
         e.preventDefault(); // EVITA O RELOAD DA PÁGINA!
         
+        const eventNameInput = document.getElementById('event-name');
+        const eventName = eventNameInput ? eventNameInput.value : '';
         const date = document.getElementById('event-date').value;
         const time = document.getElementById('event-time').value;
         const loc = document.getElementById('event-location').value;
@@ -293,12 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Validate basic event fields
         if (!date || !time || !loc) {
-            alert('Preencha os dados obrigatórios do evento antes de salvar!');
-            return;
-        }
-
-        if (stagedBatches.length === 0) {
-            alert('Adicione ao menos um lote de arquivos (botão Anexar Arquivo) antes de salvar a página.');
+            alert('Preencha os dados obrigatórios do evento (Data, Hora, Local) antes de salvar!');
             return;
         }
 
@@ -309,11 +306,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 1. Insert Event Data
+            // Passamos event_name caso o input exista
+            const eventPayload = { event_date: date, event_time: time, event_location: loc, designer_name: designer };
+            if (eventName) {
+                eventPayload.event_name = eventName;
+            }
+
             const { data: eventData, error: eventError } = await supabase
                 .from('app_upload_events')
-                .insert([
-                    { event_date: date, event_time: time, event_location: loc, designer_name: designer }
-                ])
+                .insert([eventPayload])
                 .select();
 
             if (eventError) throw eventError;
@@ -399,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Limpa tudo após salvar com sucesso
             stagedBatches = [];
             renderHistory();
+            if (eventNameInput) eventNameInput.value = '';
             document.getElementById('event-date').value = '';
             document.getElementById('event-time').value = '';
             document.getElementById('event-location').value = '';
