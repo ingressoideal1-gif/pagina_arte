@@ -396,18 +396,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             showToast('Evento e arquivos salvos no Supabase com sucesso!', 'success');
-            
-            // Limpa tudo após salvar com sucesso
+            // Limpa apenas os uploads pendentes, mantendo as informações e os lotes salvos na tela
             savedBatches = savedBatches.concat(stagedBatches);
             stagedBatches = [];
             renderHistory();
-            if (eventNameInput) eventNameInput.value = '';
-            document.getElementById('event-date').value = '';
-            document.getElementById('event-time').value = '';
-            document.getElementById('event-location').value = '';
-            const selectedRow = designersTable.querySelector('tr.selected');
-            if (selectedRow) selectedRow.classList.remove('selected');
-            editorBlocks.forEach(block => block.querySelector('.ql-editor').innerHTML = '');
+            
+            // As linhas abaixo foram removidas para evitar que o usuário perca o que digitou
+            // if (eventNameInput) eventNameInput.value = '';
+            // document.getElementById('event-date').value = '';
+            // document.getElementById('event-time').value = '';
+            // document.getElementById('event-location').value = '';
+            // const selectedRow = designersTable.querySelector('tr.selected');
+            // if (selectedRow) selectedRow.classList.remove('selected');
+            // editorBlocks.forEach(block => block.querySelector('.ql-editor').innerHTML = '');
 
         } catch (error) {
             console.error('Erro Supabase:', error);
