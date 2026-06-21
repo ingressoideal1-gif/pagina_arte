@@ -746,10 +746,51 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `
                 <div class="saved-event-title">${event.event_name || 'Sem título'}</div>
                 <div class="saved-event-meta"><i class="fa-regular fa-calendar"></i> ${event.event_date}</div>
+                <button class="btn-delete-event" onclick="event.stopPropagation(); window.deleteEvent(${event.id})" title="Excluir evento"><i class="fa-solid fa-trash"></i></button>
             `;
             listEl.appendChild(li);
         });
     }
+
+    window.deleteEvent = async function(eventId) {
+        if (!confirm('Tem certeza que deseja excluir PERMANENTEMENTE este evento e todos os seus anexos do banco de dados? Esta ação não pode ser desfeita.')) return;
+        
+        try {
+            showToast('Excluindo...', 'info');
+            
+            // 1. Fetch file paths to delete from storage
+            const { data: filesData } = await supabase.from('app_upload_files').select('storage_path').eq('event_id', eventId);
+            if (filesData && filesData.length > 0) {
+                const pathsToRemove = filesData.map(f => {
+                    const urlParts = f.storage_path.split('/uploads/');
+                    return urlParts.length > 1 ? urlParts[1] : null;
+                }).filter(p => p !== null);
+                
+                if (pathsToRemove.length > 0) {
+                    await supabase.storage.from('uploads').remove(pathsToRemove);
+                }
+            }
+            
+            // 2. Delete DB records
+            await supabase.from('app_upload_files').delete().eq('event_id', eventId);
+            await supabase.from('app_upload_observations').delete().eq('event_id', eventId);
+            
+            const { error: eventError } = await supabase.from('app_upload_events').delete().eq('id', eventId);
+            if (eventError) throw eventError;
+            
+            // If deleting the current editing event, reset UI
+            if (currentEditingEventId === eventId) {
+                const btnNewEvent = document.getElementById('btn-new-event');
+                if (btnNewEvent) btnNewEvent.click(); // Uses the logic we already created to clear the screen!
+            }
+            
+            showToast('Evento excluído com sucesso!', 'success');
+            fetchSavedEvents();
+        } catch (error) {
+            console.error('Erro ao excluir evento:', error);
+            alert("ERRO ao excluir: " + (error.message || JSON.stringify(error)));
+        }
+    };
 
     window.loadEvent = async function(eventId) {
         if (!confirm('Deseja carregar este evento? As mudanças não salvas na tela atual serão perdidas.')) return;

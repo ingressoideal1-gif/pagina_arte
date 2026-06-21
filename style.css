@@ -507,6 +507,7 @@ section h2, section h3 {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    position: relative;
 }
 
 .saved-event-item:hover {
@@ -519,6 +520,7 @@ section h2, section h3 {
     font-weight: 600;
     color: var(--text-color);
     font-size: 0.95rem;
+    padding-right: 2rem; /* espaço para o botão de lixeira */
 }
 
 .saved-event-meta {
@@ -528,6 +530,23 @@ section h2, section h3 {
     align-items: center;
     gap: 0.25rem;
 }
+
+.btn-delete-event {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem;
+    transition: color 0.2s;
+}
+
+.btn-delete-event:hover {
+    color: var(--danger);
+}
+
 
 .btn-add-to-batch {
     background: rgba(34, 197, 94, 0.1);
