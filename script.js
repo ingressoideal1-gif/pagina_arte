@@ -443,11 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
         header.appendChild(btnDownloadZip);
 
         const filesGrid = document.createElement('div');
-        filesGrid.className = 'history-files-grid';
-        filesGrid.style.display = 'flex';
-        filesGrid.style.gap = '0.5rem';
-        filesGrid.style.marginTop = '0.5rem';
-        filesGrid.style.flexWrap = 'wrap';
+        filesGrid.className = 'history-files preview-grid';
+        filesGrid.style.padding = '0.5rem 0';
 
         batch.files.forEach(file => {
             const thumb = createHistoryThumbnail(file);
