@@ -245,7 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Final Submission ---
-    btnSaveAll.addEventListener('click', async () => {
+    btnSaveAll.addEventListener('click', async (e) => {
+        e.preventDefault(); // EVITA O RELOAD DA PÁGINA!
+        
         const date = document.getElementById('event-date').value;
         const time = document.getElementById('event-time').value;
         const loc = document.getElementById('event-location').value;
@@ -259,12 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Validate basic event fields
         if (!date || !time || !loc) {
-            showToast('Preencha os dados obrigatórios do evento antes de salvar!', 'error');
+            alert('Preencha os dados obrigatórios do evento antes de salvar!');
             return;
         }
 
         if (currentFiles.length === 0) {
-            showToast('Anexe ao menos um arquivo antes de salvar.', 'error');
+            alert('Anexe ao menos um arquivo antes de salvar.');
             return;
         }
 
