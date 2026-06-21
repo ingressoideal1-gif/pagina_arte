@@ -398,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Evento e arquivos salvos no Supabase com sucesso!', 'success');
             
             // Limpa tudo após salvar com sucesso
+            savedBatches = savedBatches.concat(stagedBatches);
             stagedBatches = [];
             renderHistory();
             if (eventNameInput) eventNameInput.value = '';
@@ -419,11 +420,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // State
+    let currentFiles = [];
+    let stagedBatches = [];
+    let savedBatches = []; // Armazena lotes que já subiram pro banco
+
     // --- History UI ---
     function renderHistory() {
         historyList.innerHTML = '';
         
-        if (stagedBatches.length === 0) {
+        const totalBatches = stagedBatches.length + savedBatches.length;
+        if (totalBatches === 0) {
             historySection.classList.add('hidden');
             document.getElementById('main-empty-state').style.display = 'flex';
             return;
@@ -432,19 +439,30 @@ document.addEventListener('DOMContentLoaded', () => {
         historySection.classList.remove('hidden');
         document.getElementById('main-empty-state').style.display = 'none';
 
-        // Render batches in reverse order (newest first)
-        for (let b = stagedBatches.length - 1; b >= 0; b--) {
-            const batch = stagedBatches[b];
+        // Render both saved and staged (newest first)
+        const allBatches = [
+            ...stagedBatches.map(b => ({...b, isSaved: false})),
+            ...savedBatches.map(b => ({...b, isSaved: true}))
+        ];
+
+        for (let b = allBatches.length - 1; b >= 0; b--) {
+            const batch = allBatches[b];
             
             const item = document.createElement('div');
             item.className = 'history-item';
+            if (batch.isSaved) {
+                item.style.borderLeft = '4px solid var(--success)';
+                item.style.opacity = '0.85';
+            }
             
             const header = document.createElement('div');
             header.className = 'history-item-header';
             
+            let statusBadge = batch.isSaved ? `<span style="background: var(--success); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px;">Salvo na Nuvem</span>` : '';
+
             const headerInfo = document.createElement('div');
             headerInfo.innerHTML = `
-                <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
+                <span class="history-title"><strong>Lote:</strong> ${batch.title} ${statusBadge}</span><br>
                 <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'}</span><br>
                 <span class="history-meta" style="color: var(--primary); font-size: 0.8rem; margin-top: 2px; display: inline-block;"><i class="fa-regular fa-clock"></i> Criado em: ${batch.timestamp}</span>
             `;
@@ -456,42 +474,53 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnDownloadZip = document.createElement('button');
             btnDownloadZip.className = 'btn-download-zip';
             btnDownloadZip.innerHTML = `<i class="fa-solid fa-download"></i> Baixar Lote`;
-            btnDownloadZip.onclick = () => downloadBatchZip(b);
-
-            const btnAddFiles = document.createElement('button');
-            btnAddFiles.className = 'btn-add-to-batch';
-            btnAddFiles.innerHTML = `<i class="fa-solid fa-plus"></i>`;
-            btnAddFiles.title = "Adicionar mais arquivos";
-            btnAddFiles.onclick = () => {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'file';
-                hiddenInput.multiple = true;
-                hiddenInput.onchange = (e) => {
-                    const newFiles = Array.from(e.target.files);
-                    if (newFiles.length > 0) {
-                        const addedTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        newFiles.forEach(f => f.addedAt = addedTime);
-                        batch.files.push(...newFiles);
-                        renderHistory();
-                    }
-                };
-                hiddenInput.click();
-            };
-
-            const btnDeleteBatch = document.createElement('button');
-            btnDeleteBatch.className = 'btn-delete-batch';
-            btnDeleteBatch.innerHTML = `<i class="fa-solid fa-trash"></i>`;
-            btnDeleteBatch.title = "Excluir Lote";
-            btnDeleteBatch.onclick = () => {
-                if (confirm('Tem certeza que deseja excluir este lote inteiro?')) {
-                    stagedBatches.splice(b, 1);
-                    renderHistory();
-                }
-            };
+            btnDownloadZip.onclick = () => downloadBatchZip(batch, batch.isSaved);
 
             btnGroup.appendChild(btnDownloadZip);
-            btnGroup.appendChild(btnAddFiles);
-            btnGroup.appendChild(btnDeleteBatch);
+
+            // Apenas botões de edição se o lote NÃO estiver salvo
+            if (!batch.isSaved) {
+                const btnAddFiles = document.createElement('button');
+                btnAddFiles.className = 'btn-add-to-batch';
+                btnAddFiles.innerHTML = `<i class="fa-solid fa-plus"></i>`;
+                btnAddFiles.title = "Adicionar mais arquivos";
+                btnAddFiles.onclick = () => {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'file';
+                    hiddenInput.multiple = true;
+                    hiddenInput.onchange = (e) => {
+                        const newFiles = Array.from(e.target.files);
+                        if (newFiles.length > 0) {
+                            const addedTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            newFiles.forEach(f => f.addedAt = addedTime);
+                            // Precisamos achar o índice real no stagedBatches
+                            const realIndex = stagedBatches.indexOf(batch);
+                            if (realIndex > -1) {
+                                stagedBatches[realIndex].files.push(...newFiles);
+                                renderHistory();
+                            }
+                        }
+                    };
+                    hiddenInput.click();
+                };
+
+                const btnDeleteBatch = document.createElement('button');
+                btnDeleteBatch.className = 'btn-delete-batch';
+                btnDeleteBatch.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+                btnDeleteBatch.title = "Excluir Lote";
+                btnDeleteBatch.onclick = () => {
+                    if (confirm('Tem certeza que deseja excluir este lote inteiro?')) {
+                        const realIndex = stagedBatches.indexOf(batch);
+                        if (realIndex > -1) {
+                            stagedBatches.splice(realIndex, 1);
+                            renderHistory();
+                        }
+                    }
+                };
+
+                btnGroup.appendChild(btnAddFiles);
+                btnGroup.appendChild(btnDeleteBatch);
+            }
 
             header.appendChild(headerInfo);
             header.appendChild(btnGroup);
@@ -503,22 +532,27 @@ document.addEventListener('DOMContentLoaded', () => {
             batch.files.forEach((file, fIndex) => {
                 const thumb = createHistoryThumbnail(file);
                 
-                // Add individual remove button
-                const btnRemoveFile = document.createElement('button');
-                btnRemoveFile.className = 'btn-remove-file';
-                btnRemoveFile.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                btnRemoveFile.onclick = (e) => {
-                    e.stopPropagation();
-                    if (confirm('Tem certeza que deseja excluir esta imagem do lote?')) {
-                        batch.files.splice(fIndex, 1);
-                        if (batch.files.length === 0) {
-                            stagedBatches.splice(b, 1); // remove batch if empty
+                // Add individual remove button Apenas se NÃO estiver salvo
+                if (!batch.isSaved) {
+                    const btnRemoveFile = document.createElement('button');
+                    btnRemoveFile.className = 'btn-remove-file';
+                    btnRemoveFile.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                    btnRemoveFile.onclick = (e) => {
+                        e.stopPropagation();
+                        if (confirm('Tem certeza que deseja excluir esta imagem do lote?')) {
+                            const realIndex = stagedBatches.indexOf(batch);
+                            if (realIndex > -1) {
+                                stagedBatches[realIndex].files.splice(fIndex, 1);
+                                if (stagedBatches[realIndex].files.length === 0) {
+                                    stagedBatches.splice(realIndex, 1); // remove batch if empty
+                                }
+                                renderHistory();
+                            }
                         }
-                        renderHistory();
-                    }
-                };
+                    };
+                    thumb.appendChild(btnRemoveFile);
+                }
                 
-                thumb.appendChild(btnRemoveFile);
                 filesGrid.appendChild(thumb);
             });
 
