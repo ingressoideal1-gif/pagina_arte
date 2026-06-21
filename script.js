@@ -139,11 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         newWindow.innerHTML = `
             <div class="block-header" style="display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; background: var(--bg-color); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); gap: 0.5rem;">
-                <div style="flex: 0 0 40%; min-width: 0;">
+                <div style="flex: 1; min-width: 100px;">
                     <input type="text" class="block-title-input" placeholder="Nome do Bloco (ex: Copos, Pulseiras)" style="width: 100%; font-weight: bold; font-size: 1.05rem; border: none; background: transparent; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.2rem; color: var(--text-color); outline: none;">
                 </div>
-                <div class="toolbar-container" style="flex: 0 0 45%; min-width: 0; overflow-x: auto; overflow-y: hidden;"></div>
-                <div class="block-actions" style="flex: 1; display: flex; justify-content: flex-end; gap: 0.5rem; min-width: 0;">
+                <div class="toolbar-container" style="flex: 0 0 auto; overflow: hidden;"></div>
+                <div class="block-actions" style="flex: 0 0 auto; display: flex; gap: 0.5rem;">
                     <button type="button" class="btn-add-block" title="Adicionar Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
                         <i class="fa-solid fa-plus"></i>
                     </button>

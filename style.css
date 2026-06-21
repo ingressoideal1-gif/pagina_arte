@@ -299,8 +299,8 @@ section h2, section h3 {
     background-color: transparent !important;
     font-family: inherit;
     white-space: nowrap !important;
-    overflow-x: auto;
-    width: 100%;
+    overflow: hidden;
+    width: auto;
 }
 
 .ql-toolbar .ql-formats {
