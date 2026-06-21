@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         stagedBatches.push(batch);
-        addHistoryItem(batch, batchIndex);
+        renderHistory();
         
         // Limpa e fecha modal
         closeModal();
@@ -394,17 +394,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Limpa tudo após salvar com sucesso
             stagedBatches = [];
-            historyList.innerHTML = '';
+            renderHistory();
             document.getElementById('event-date').value = '';
             document.getElementById('event-time').value = '';
             document.getElementById('event-location').value = '';
             const selectedRow = designersTable.querySelector('tr.selected');
             if (selectedRow) selectedRow.classList.remove('selected');
             editorBlocks.forEach(block => block.querySelector('.ql-editor').innerHTML = '');
-            
-            // Oculta histórico
-            historySection.classList.add('hidden');
-            document.getElementById('main-empty-state').style.display = 'flex';
 
         } catch (error) {
             console.error('Erro Supabase:', error);
@@ -418,44 +414,89 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- History UI ---
-    function addHistoryItem(batch, batchIndex) {
+    function renderHistory() {
+        historyList.innerHTML = '';
+        
+        if (stagedBatches.length === 0) {
+            historySection.classList.add('hidden');
+            document.getElementById('main-empty-state').style.display = 'flex';
+            return;
+        }
+
         historySection.classList.remove('hidden');
         document.getElementById('main-empty-state').style.display = 'none';
 
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        
-        const header = document.createElement('div');
-        header.className = 'history-item-header';
-        
-        const headerInfo = document.createElement('div');
-        headerInfo.innerHTML = `
-            <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
-            <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'}</span>
-        `;
-        
-        const btnDownloadZip = document.createElement('button');
-        btnDownloadZip.className = 'btn-download-zip';
-        btnDownloadZip.innerHTML = `<i class="fa-solid fa-download"></i> Baixar Lote`;
-        btnDownloadZip.onclick = () => downloadBatchZip(batchIndex);
+        // Render batches in reverse order (newest first)
+        for (let b = stagedBatches.length - 1; b >= 0; b--) {
+            const batch = stagedBatches[b];
+            
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            
+            const header = document.createElement('div');
+            header.className = 'history-item-header';
+            
+            const headerInfo = document.createElement('div');
+            headerInfo.innerHTML = `
+                <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
+                <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'}</span>
+            `;
+            
+            const btnGroup = document.createElement('div');
+            btnGroup.style.display = 'flex';
+            btnGroup.style.gap = '0.5rem';
 
-        header.appendChild(headerInfo);
-        header.appendChild(btnDownloadZip);
+            const btnDownloadZip = document.createElement('button');
+            btnDownloadZip.className = 'btn-download-zip';
+            btnDownloadZip.innerHTML = `<i class="fa-solid fa-download"></i> Baixar Lote`;
+            btnDownloadZip.onclick = () => downloadBatchZip(b);
 
-        const filesGrid = document.createElement('div');
-        filesGrid.className = 'history-files preview-grid';
-        filesGrid.style.padding = '0.5rem 0';
+            const btnDeleteBatch = document.createElement('button');
+            btnDeleteBatch.className = 'btn-delete-batch';
+            btnDeleteBatch.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+            btnDeleteBatch.title = "Excluir Lote";
+            btnDeleteBatch.onclick = () => {
+                if (confirm('Tem certeza que deseja excluir este lote inteiro?')) {
+                    stagedBatches.splice(b, 1);
+                    renderHistory();
+                }
+            };
 
-        batch.files.forEach(file => {
-            const thumb = createHistoryThumbnail(file);
-            filesGrid.appendChild(thumb);
-        });
+            btnGroup.appendChild(btnDownloadZip);
+            btnGroup.appendChild(btnDeleteBatch);
 
-        item.appendChild(header);
-        item.appendChild(filesGrid);
-        
-        // Prepend to top of list
-        historyList.insertBefore(item, historyList.firstChild);
+            header.appendChild(headerInfo);
+            header.appendChild(btnGroup);
+
+            const filesGrid = document.createElement('div');
+            filesGrid.className = 'history-files preview-grid';
+            filesGrid.style.padding = '0.5rem 0';
+
+            batch.files.forEach((file, fIndex) => {
+                const thumb = createHistoryThumbnail(file);
+                
+                // Add individual remove button
+                const btnRemoveFile = document.createElement('button');
+                btnRemoveFile.className = 'btn-remove-file';
+                btnRemoveFile.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                btnRemoveFile.onclick = (e) => {
+                    e.stopPropagation();
+                    batch.files.splice(fIndex, 1);
+                    if (batch.files.length === 0) {
+                        stagedBatches.splice(b, 1); // remove batch if empty
+                    }
+                    renderHistory();
+                };
+                
+                thumb.appendChild(btnRemoveFile);
+                filesGrid.appendChild(thumb);
+            });
+
+            item.appendChild(header);
+            item.appendChild(filesGrid);
+            
+            historyList.appendChild(item);
+        }
     }
     
     function createHistoryThumbnail(file) {
