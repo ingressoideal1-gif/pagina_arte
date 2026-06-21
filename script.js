@@ -370,7 +370,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const eventNameInput = document.getElementById('event-name');
                 if (eventNameInput) eventNameInput.value = '';
                 document.getElementById('event-date').value = '';
-                document.getElementById('event-time').value = '';
+                const timeEl = document.getElementById('event-time');
+                if (timeEl) timeEl.value = '';
                 document.getElementById('event-location').value = '';
                 
                 const selectedRow = designersTable.querySelector('tr.selected');
@@ -400,7 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventNameInput = document.getElementById('event-name');
         const eventName = eventNameInput ? eventNameInput.value : '';
         const date = document.getElementById('event-date').value;
-        const time = document.getElementById('event-time').value;
+        const timeEl = document.getElementById('event-time');
+        const time = timeEl ? timeEl.value : null;
         const loc = document.getElementById('event-location').value;
         
         // Find selected designer
@@ -895,7 +897,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventNameInput = document.getElementById('event-name');
             if (eventNameInput) eventNameInput.value = eventData.event_name || '';
             document.getElementById('event-date').value = eventData.event_date || '';
-            document.getElementById('event-time').value = eventData.event_time || '';
+            const timeElLoad = document.getElementById('event-time');
+            if (timeElLoad) timeElLoad.value = eventData.event_time || '';
             document.getElementById('event-location').value = eventData.event_location || '';
             
             // Select designer
