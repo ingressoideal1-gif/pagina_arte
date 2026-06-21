@@ -42,16 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Flatpickr for Date and Time
     flatpickr(".date-picker", {
         locale: "pt",
-        dateFormat: "d/m/Y",
-        minDate: "today",
-        disableMobile: "true"
-    });
-
-    flatpickr(".time-picker", {
         enableTime: true,
-        noCalendar: true,
-        dateFormat: "H:i",
+        dateFormat: "d/m/Y H:i",
         time_24hr: true,
+        minDate: "today",
         disableMobile: "true"
     });
 
@@ -896,7 +890,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const eventNameInput = document.getElementById('event-name');
             if (eventNameInput) eventNameInput.value = eventData.event_name || '';
-            document.getElementById('event-date').value = eventData.event_date || '';
+            
+            let fullDate = eventData.event_date || '';
+            if (eventData.event_time) {
+                fullDate += ' ' + eventData.event_time;
+            }
+            document.getElementById('event-date').value = fullDate;
+            
             const timeElLoad = document.getElementById('event-time');
             if (timeElLoad) timeElLoad.value = eventData.event_time || '';
             document.getElementById('event-location').value = eventData.event_location || '';
