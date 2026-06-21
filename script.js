@@ -307,13 +307,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (obsError) throw obsError;
             }
 
-            // 3. Insert File Metadata
-            const fileRecords = currentFiles.map(f => ({
-                event_id: eventId,
-                file_name: f.name,
-                file_size: f.size
-            }));
+            // 3. Insert File Metadata e Upload Físico (Storage)
+            const fileRecords = [];
+            
+            for (let i = 0; i < currentFiles.length; i++) {
+                const f = currentFiles[i];
+                
+                // Gerar nome único para o arquivo no Storage para evitar sobreposições
+                const fileExt = f.name.split('.').pop();
+                const uniqueName = `${Date.now()}_${i}.${fileExt}`;
+                const filePath = `eventos/${eventId}/${uniqueName}`;
 
+                // Faz o Upload físico do arquivo para o Bucket 'uploads'
+                const { data: storageData, error: storageError } = await supabase
+                    .storage
+                    .from('uploads')
+                    .upload(filePath, f, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (storageError) {
+                    console.error("Erro no upload do arquivo:", storageError);
+                    showToast(`Falha ao enviar o arquivo: ${f.name}`, 'error');
+                    throw storageError; 
+                }
+
+                // Obter a URL pública do arquivo recém-upado
+                const { data: publicUrlData } = supabase
+                    .storage
+                    .from('uploads')
+                    .getPublicUrl(filePath);
+
+                fileRecords.push({
+                    event_id: eventId,
+                    file_name: f.name,
+                    file_size: f.size,
+                    storage_path: publicUrlData.publicUrl
+                });
+            }
+
+            // Grava os dados do arquivo no Banco de Dados
             if (fileRecords.length > 0) {
                 const { error: filesError } = await supabase
                     .from('app_upload_files')
