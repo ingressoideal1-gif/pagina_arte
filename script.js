@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let currentFiles = [];
     let stagedBatches = [];
+    let savedBatches = []; // Armazena lotes que já subiram pro banco
 
     // --- Modal Logic ---
     function openModal() {
@@ -421,10 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // State
-    let currentFiles = [];
-    let stagedBatches = [];
-    let savedBatches = []; // Armazena lotes que já subiram pro banco
+
 
     // --- History UI ---
     function renderHistory() {
