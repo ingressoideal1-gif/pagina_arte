@@ -57,8 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Rich Text Editors (Quill) ---
     const observationsRoot = document.getElementById('observations-root-container');
-    const btnAddEditor = document.getElementById('btn-add-editor');
-    
     const quillOptions = {
         theme: 'snow',
         modules: {
@@ -79,9 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function attachBlockEvents(blockEl) {
+        const btnAdd = blockEl.querySelector('.btn-add-block');
         const btnToggle = blockEl.querySelector('.btn-toggle-block');
         const btnDelete = blockEl.querySelector('.btn-delete-block');
         const editorBlock = blockEl.querySelector('.editor-block');
+        
+        if (btnAdd) {
+            btnAdd.addEventListener('click', () => {
+                window.addNewObservationBlock();
+            });
+        }
         
         if (btnToggle) {
             btnToggle.addEventListener('click', () => {
@@ -118,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Adiciona nova janela inteira de observação
-    btnAddEditor.addEventListener('click', () => {
+    window.addNewObservationBlock = function() {
         const newWindow = document.createElement('div');
         newWindow.className = 'form-group observation-window';
         newWindow.style.margin = '0';
@@ -130,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="text" class="block-title-input" placeholder="Nome do Bloco (ex: Copos, Pulseiras)" style="width: 100%; font-weight: bold; font-size: 1.05rem; border: none; background: transparent; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.2rem; color: var(--text-color); outline: none;">
                 </div>
                 <div class="block-actions" style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn-add-block" title="Adicionar Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                     <button type="button" class="btn-toggle-block" title="Minimizar / Expandir Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
                         <i class="fa-solid fa-chevron-up"></i>
                     </button>
@@ -147,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newEditorEl = newWindow.querySelector('.quill-editor');
         new Quill(newEditorEl, quillOptions);
         attachBlockEvents(newWindow);
-    });
+    };
 
     // State
     let currentFiles = [];
@@ -916,7 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (index === 0) {
                     targetBlock = firstBlock.closest('.observation-window');
                 } else {
-                    document.getElementById('btn-add-editor').click();
+                    window.addNewObservationBlock();
                     const allWindows = document.querySelectorAll('.observation-window');
                     targetBlock = allWindows[allWindows.length - 1];
                 }
