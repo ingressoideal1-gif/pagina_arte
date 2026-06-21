@@ -830,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `
                 <div class="saved-event-title">${event.event_name || 'Sem título'}</div>
                 <div class="saved-event-meta"><i class="fa-regular fa-calendar"></i> ${event.event_date}</div>
-                <button class="btn-delete-event" onclick="event.stopPropagation(); window.deleteEvent(${event.id})" title="Excluir evento"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn-delete-event" onclick="event.stopPropagation(); window.deleteEvent('${event.id}')" title="Excluir evento"><i class="fa-solid fa-trash"></i></button>
             `;
             listEl.appendChild(li);
         });
