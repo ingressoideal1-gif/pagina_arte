@@ -481,11 +481,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnRemoveFile.innerHTML = '<i class="fa-solid fa-xmark"></i>';
                 btnRemoveFile.onclick = (e) => {
                     e.stopPropagation();
-                    batch.files.splice(fIndex, 1);
-                    if (batch.files.length === 0) {
-                        stagedBatches.splice(b, 1); // remove batch if empty
+                    if (confirm('Tem certeza que deseja excluir esta imagem do lote?')) {
+                        batch.files.splice(fIndex, 1);
+                        if (batch.files.length === 0) {
+                            stagedBatches.splice(b, 1); // remove batch if empty
+                        }
+                        renderHistory();
                     }
-                    renderHistory();
                 };
                 
                 thumb.appendChild(btnRemoveFile);
