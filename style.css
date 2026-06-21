@@ -296,11 +296,10 @@ section h2, section h3 {
 
 .ql-toolbar.ql-snow {
     border: none !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    border-radius: 0 !important;
-    background-color: #f8fafc;
+    background-color: transparent !important;
     font-family: inherit;
-    white-space: normal !important; /* Permite que os botões quebrem de linha */
+    white-space: nowrap !important;
+    overflow-x: auto;
     width: 100%;
 }
 
