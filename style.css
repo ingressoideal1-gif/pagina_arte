@@ -216,10 +216,28 @@ section h2, section h3 {
 }
 
 .form-group label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 0.25rem;
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+/* Block Headers */
+.block-title-input::placeholder {
+    color: var(--text-muted);
+    font-weight: normal;
+}
+.block-title-input:focus {
+    border-bottom: 1px solid var(--primary) !important;
+}
+
+.btn-toggle-block:hover {
+    background: var(--border-color) !important;
+}
+
+.btn-delete-block:hover {
+    background: #fee2e2 !important;
+    border-color: var(--danger) !important;
 }
 
 .form-group input, 
