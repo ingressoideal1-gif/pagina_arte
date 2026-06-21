@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (storageError) {
                     console.error("Erro no upload do arquivo:", storageError);
-                    showToast(`Falha ao enviar o arquivo: ${f.name}`, 'error');
+                    alert("Erro ao subir arquivo: " + (storageError.message || JSON.stringify(storageError)));
                     throw storageError; 
                 }
 
@@ -366,7 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Erro Supabase:', error);
-            showToast('Erro ao salvar no banco de dados. Verifique a conexão.', 'error');
+            alert("ERRO: " + (error.message || JSON.stringify(error)));
+            showToast('Erro ao salvar no banco de dados.', 'error');
         } finally {
             // Restore button
             btnSaveAll.innerHTML = originalBtnText;
