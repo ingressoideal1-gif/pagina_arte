@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="flex: 1; min-width: 100px;">
                     <input type="text" class="block-title-input" placeholder="Nome do Bloco (ex: Copos, Pulseiras)" style="width: 100%; font-weight: bold; font-size: 1.05rem; border: none; background: transparent; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.2rem; color: var(--text-color); outline: none;">
                 </div>
-                <div class="toolbar-container" style="flex: 0 0 auto; overflow: hidden;"></div>
+                <div class="toolbar-container" style="flex: 0 0 auto; display: flex; align-items: center;"></div>
                 <div class="block-actions" style="flex: 0 0 auto; display: flex; gap: 0.5rem;">
                     <button type="button" class="btn-add-block" title="Adicionar Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
                         <i class="fa-solid fa-plus"></i>

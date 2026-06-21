@@ -299,7 +299,7 @@ section h2, section h3 {
     background-color: transparent !important;
     font-family: inherit;
     white-space: nowrap !important;
-    overflow: hidden;
+    overflow: visible;
     width: auto;
 }
 
