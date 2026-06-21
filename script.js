@@ -259,9 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const batchIndex = stagedBatches.length;
+        const now = new Date();
+        currentFiles.forEach(f => f.addedAt = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+
         const batch = {
             title: title || 'Lote sem título',
             observation: obs || '',
+            timestamp: now.toLocaleString(),
             files: [...currentFiles] // Copia os arquivos
         };
         
@@ -439,7 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const headerInfo = document.createElement('div');
             headerInfo.innerHTML = `
                 <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
-                <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'}</span>
+                <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'}</span><br>
+                <span class="history-meta" style="color: var(--primary); font-size: 0.8rem; margin-top: 2px; display: inline-block;"><i class="fa-regular fa-clock"></i> Criado em: ${batch.timestamp}</span>
             `;
             
             const btnGroup = document.createElement('div');
@@ -450,6 +455,26 @@ document.addEventListener('DOMContentLoaded', () => {
             btnDownloadZip.className = 'btn-download-zip';
             btnDownloadZip.innerHTML = `<i class="fa-solid fa-download"></i> Baixar Lote`;
             btnDownloadZip.onclick = () => downloadBatchZip(b);
+
+            const btnAddFiles = document.createElement('button');
+            btnAddFiles.className = 'btn-add-to-batch';
+            btnAddFiles.innerHTML = `<i class="fa-solid fa-plus"></i>`;
+            btnAddFiles.title = "Adicionar mais arquivos";
+            btnAddFiles.onclick = () => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.multiple = true;
+                hiddenInput.onchange = (e) => {
+                    const newFiles = Array.from(e.target.files);
+                    if (newFiles.length > 0) {
+                        const addedTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        newFiles.forEach(f => f.addedAt = addedTime);
+                        batch.files.push(...newFiles);
+                        renderHistory();
+                    }
+                };
+                hiddenInput.click();
+            };
 
             const btnDeleteBatch = document.createElement('button');
             btnDeleteBatch.className = 'btn-delete-batch';
@@ -463,6 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             btnGroup.appendChild(btnDownloadZip);
+            btnGroup.appendChild(btnAddFiles);
             btnGroup.appendChild(btnDeleteBatch);
 
             header.appendChild(headerInfo);
@@ -539,6 +565,13 @@ document.addEventListener('DOMContentLoaded', () => {
         thumb.addEventListener('click', () => {
             openLightbox(file, fileUrl);
         });
+
+        if (file.addedAt) {
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'thumb-timestamp';
+            timeSpan.textContent = file.addedAt;
+            thumb.appendChild(timeSpan);
+        }
 
         return thumb;
     }
