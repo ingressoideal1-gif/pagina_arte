@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Elements ---
     const form = document.getElementById('observation-form');
     const toast = document.getElementById('toast');
-    const btnSaveAll = document.getElementById('submit-btn'); // Assuming submit-btn triggers this
+    const btnStageBatch = document.getElementById('btn-stage-batch');
+    const btnSavePage = document.getElementById('btn-save-page');
     const designersTable = document.getElementById('designers-table'); // Ensure this exists
 
     // Main View Elements
@@ -99,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let currentFiles = [];
+    let stagedBatches = [];
 
     // --- Modal Logic ---
     function openModal() {
@@ -244,8 +246,34 @@ document.addEventListener('DOMContentLoaded', () => {
         resetModalInner();
     });
 
-    // --- Final Submission ---
-    btnSaveAll.addEventListener('click', async (e) => {
+    // --- Staging a Batch (Modal Button) ---
+    btnStageBatch.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const title = document.getElementById('title').value;
+        const obs = document.getElementById('observations').value;
+
+        if (currentFiles.length === 0) {
+            alert('Anexe ao menos um arquivo antes de adicionar ao lote.');
+            return;
+        }
+
+        const batchIndex = stagedBatches.length;
+        const batch = {
+            title: title || 'Lote sem título',
+            observation: obs || '',
+            files: [...currentFiles] // Copia os arquivos
+        };
+        
+        stagedBatches.push(batch);
+        addHistoryItem(batch, batchIndex);
+        
+        // Limpa e fecha modal
+        closeModal();
+    });
+
+    // --- Final Submission (Page Button) ---
+    btnSavePage.addEventListener('click', async (e) => {
         e.preventDefault(); // EVITA O RELOAD DA PÁGINA!
         
         const date = document.getElementById('event-date').value;
@@ -265,15 +293,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (currentFiles.length === 0) {
-            alert('Anexe ao menos um arquivo antes de salvar.');
+        if (stagedBatches.length === 0) {
+            alert('Adicione ao menos um lote de arquivos (botão Anexar Arquivo) antes de salvar a página.');
             return;
         }
 
         // Start Loading State
-        const originalBtnText = btnSaveAll.innerHTML;
-        btnSaveAll.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
-        btnSaveAll.disabled = true;
+        const originalBtnText = btnSavePage.innerHTML;
+        btnSavePage.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando Evento e Fazendo Uploads...';
+        btnSavePage.disabled = true;
 
         try {
             // 1. Insert Event Data
@@ -309,47 +337,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (obsError) throw obsError;
             }
 
-            // 3. Insert File Metadata e Upload Físico (Storage)
+            // 3. Insert File Metadata e Upload Físico (Storage) por Lote
             const fileRecords = [];
             
-            for (let i = 0; i < currentFiles.length; i++) {
-                const f = currentFiles[i];
+            for (let b = 0; b < stagedBatches.length; b++) {
+                const batch = stagedBatches[b];
                 
-                // Gerar nome único para o arquivo no Storage para evitar sobreposições
-                const fileExt = f.name.split('.').pop();
-                const uniqueName = `${Date.now()}_${i}.${fileExt}`;
-                const filePath = `eventos/${eventId}/${uniqueName}`;
+                for (let i = 0; i < batch.files.length; i++) {
+                    const f = batch.files[i];
+                    
+                    const fileExt = f.name.split('.').pop();
+                    const uniqueName = `${Date.now()}_b${b}_${i}.${fileExt}`;
+                    const filePath = `eventos/${eventId}/${uniqueName}`;
 
-                // Faz o Upload físico do arquivo para o Bucket 'uploads'
-                const { data: storageData, error: storageError } = await supabase
-                    .storage
-                    .from('uploads')
-                    .upload(filePath, f, {
-                        cacheControl: '3600',
-                        upsert: false
+                    // Upload físico
+                    const { data: storageData, error: storageError } = await supabase
+                        .storage
+                        .from('uploads')
+                        .upload(filePath, f, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+
+                    if (storageError) {
+                        console.error("Erro no upload do arquivo:", storageError);
+                        alert("Erro ao subir arquivo: " + (storageError.message || JSON.stringify(storageError)));
+                        throw storageError; 
+                    }
+
+                    // Obter a URL pública
+                    const { data: publicUrlData } = supabase
+                        .storage
+                        .from('uploads')
+                        .getPublicUrl(filePath);
+
+                    fileRecords.push({
+                        event_id: eventId,
+                        file_name: f.name,
+                        file_size: f.size,
+                        storage_path: publicUrlData.publicUrl,
+                        batch_title: batch.title,
+                        batch_observation: batch.observation
                     });
-
-                if (storageError) {
-                    console.error("Erro no upload do arquivo:", storageError);
-                    alert("Erro ao subir arquivo: " + (storageError.message || JSON.stringify(storageError)));
-                    throw storageError; 
                 }
-
-                // Obter a URL pública do arquivo recém-upado
-                const { data: publicUrlData } = supabase
-                    .storage
-                    .from('uploads')
-                    .getPublicUrl(filePath);
-
-                fileRecords.push({
-                    event_id: eventId,
-                    file_name: f.name,
-                    file_size: f.size,
-                    storage_path: publicUrlData.publicUrl
-                });
             }
 
-            // Grava os dados do arquivo no Banco de Dados
+            // Grava os dados dos arquivos no Banco
             if (fileRecords.length > 0) {
                 const { error: filesError } = await supabase
                     .from('app_upload_files')
@@ -357,14 +390,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (filesError) throw filesError;
             }
 
-            // Update History List visually
-            addHistoryItem(date, loc, designer, currentFiles);
+            showToast('Evento e arquivos salvos no Supabase com sucesso!', 'success');
             
-            // Limpar lista atual para proximo envio
-            currentFiles = [];
-            resetModalInner();
-
-            showToast('Lote de arquivos e dados salvos no Supabase com sucesso!', 'success');
+            // Limpa tudo após salvar com sucesso
+            stagedBatches = [];
+            historyList.innerHTML = '';
+            document.getElementById('event-date').value = '';
+            document.getElementById('event-time').value = '';
+            document.getElementById('event-location').value = '';
+            const selectedRow = designersTable.querySelector('tr.selected');
+            if (selectedRow) selectedRow.classList.remove('selected');
+            editorBlocks.forEach(block => block.querySelector('.ql-editor').innerHTML = '');
+            
+            // Oculta histórico
+            historySection.classList.add('hidden');
+            document.getElementById('main-empty-state').style.display = 'flex';
 
         } catch (error) {
             console.error('Erro Supabase:', error);
@@ -372,46 +412,53 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Erro ao salvar no banco de dados.', 'error');
         } finally {
             // Restore button
-            btnSaveAll.innerHTML = originalBtnText;
-            btnSaveAll.disabled = false;
+            btnSavePage.innerHTML = originalBtnText;
+            btnSavePage.disabled = false;
         }
     });
 
-    function addHistoryItem(date, loc, designer, filesArr) {
+    // --- History UI ---
+    function addHistoryItem(batch, batchIndex) {
         historySection.classList.remove('hidden');
+        document.getElementById('main-empty-state').style.display = 'none';
+
+        const item = document.createElement('div');
+        item.className = 'history-item';
         
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const dateString = now.toLocaleDateString('pt-BR');
+        const header = document.createElement('div');
+        header.className = 'history-item-header';
         
-        const div = document.createElement('div');
-        div.className = 'history-item';
-        
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'history-header';
-        infoDiv.innerHTML = `
-            <span class="history-title">Data: ${date} | Local: ${loc}</span>
-            <span class="history-date">${dateString} às ${timeString}</span>
+        const headerInfo = document.createElement('div');
+        headerInfo.innerHTML = `
+            <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
+            <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'}</span>
         `;
-        div.appendChild(infoDiv);
-
-        const filesContainer = document.createElement('div');
-        filesContainer.className = 'history-files preview-grid';
-        filesContainer.style.padding = '0.5rem 0';
         
-        filesArr.forEach(file => {
+        const btnDownloadZip = document.createElement('button');
+        btnDownloadZip.className = 'btn-download-zip';
+        btnDownloadZip.innerHTML = `<i class="fa-solid fa-download"></i> Baixar Lote`;
+        btnDownloadZip.onclick = () => downloadBatchZip(batchIndex);
+
+        header.appendChild(headerInfo);
+        header.appendChild(btnDownloadZip);
+
+        const filesGrid = document.createElement('div');
+        filesGrid.className = 'history-files-grid';
+        filesGrid.style.display = 'flex';
+        filesGrid.style.gap = '0.5rem';
+        filesGrid.style.marginTop = '0.5rem';
+        filesGrid.style.flexWrap = 'wrap';
+
+        batch.files.forEach(file => {
             const thumb = createHistoryThumbnail(file);
-            filesContainer.appendChild(thumb);
+            filesGrid.appendChild(thumb);
         });
-        div.appendChild(filesContainer);
 
-        const obsDiv = document.createElement('div');
-        obsDiv.className = 'history-obs';
-        obsDiv.innerHTML = `<strong>Designer:</strong> ${designer} &nbsp;|&nbsp; <strong>Total:</strong> ${filesArr.length} arquivo(s)`;
-        div.appendChild(obsDiv);
-
+        item.appendChild(header);
+        item.appendChild(filesGrid);
+        
         // Prepend to top of list
-        historyList.insertBefore(div, historyList.firstChild);
+        historyList.insertBefore(item, historyList.firstChild);
     }
     
     function createHistoryThumbnail(file) {
