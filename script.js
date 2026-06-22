@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventName = eventNameInput ? eventNameInput.value : '';
         const date = document.getElementById('event-date').value;
         const timeEl = document.getElementById('event-time');
-        const time = timeEl ? timeEl.value : null;
+        const time = timeEl ? timeEl.value : '00:00';
         const loc = document.getElementById('event-location').value;
         
         // Find selected designer
