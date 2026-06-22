@@ -437,6 +437,18 @@ document.addEventListener('DOMContentLoaded', () => {
             designer = selectedRow.cells[0].textContent.trim();
         }
 
+        // Find selected order
+        let lastOrder = 'Não selecionado';
+        const ordersTable = document.getElementById('orders-table');
+        if (ordersTable) {
+            const selectedOrderRow = ordersTable.querySelector('tr.selected');
+            if (selectedOrderRow) {
+                const orderNum = selectedOrderRow.cells[0].textContent.trim();
+                const orderName = selectedOrderRow.cells[1].textContent.trim();
+                lastOrder = `${orderNum} - ${orderName}`;
+            }
+        }
+
         // Validate basic event fields
         if (!date || !time || !loc) {
             alert('Preencha os dados obrigatórios do evento (Data, Hora, Local) antes de salvar!');
@@ -449,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSavePage.disabled = true;
 
         try {
-            const eventPayload = { event_date: date, event_time: time, event_location: loc, designer_name: designer };
+            const eventPayload = { event_date: date, event_time: time, event_location: loc, designer_name: designer, last_order: lastOrder };
             if (eventName) {
                 eventPayload.event_name = eventName;
             }
@@ -602,9 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const headerInfo = document.createElement('div');
             headerInfo.innerHTML = `
-                <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
-                <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'} | <strong>Tamanho:</strong> ${totalSizeFormatted}</span><br>
-                <span class="history-meta" style="color: var(--primary); font-size: 0.8rem; margin-top: 2px; display: inline-block;"><i class="fa-regular fa-clock"></i> Criado em: ${batch.timestamp}</span>
+                <span class="history-title" style="font-size: 1.1rem;"><strong>Lote:</strong> ${batch.title}</span><br>
+                <div style="margin-top: 0.5rem; background-color: var(--border-color); color: var(--text-color); padding: 0.75rem; border-left: 4px solid var(--primary); border-radius: var(--radius-sm); font-size: 0.95rem;">
+                    <strong>Observações:</strong> ${batch.observation || 'Sem observação'}
+                </div>
             `;
             
             const btnGroup = document.createElement('div');
@@ -778,8 +791,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 filesGrid.appendChild(thumb);
             });
 
+            const footerInfo = document.createElement('div');
+            footerInfo.style.marginTop = '1rem';
+            footerInfo.style.display = 'flex';
+            footerInfo.style.justifyContent = 'space-between';
+            footerInfo.style.fontSize = '0.85rem';
+            footerInfo.style.color = 'var(--text-muted)';
+            footerInfo.innerHTML = `
+                <span><i class="fa-regular fa-clock"></i> Criado em: ${batch.timestamp}</span>
+                <span><strong>Tamanho Total:</strong> ${totalSizeFormatted}</span>
+            `;
+
             item.appendChild(header);
             item.appendChild(filesGrid);
+            item.appendChild(footerInfo);
             
             historyList.appendChild(item);
         }
@@ -1036,6 +1061,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     row.classList.remove('selected');
                 }
             });
+
+            // Select order
+            const ordersTable = document.getElementById('orders-table');
+            if (ordersTable && eventData.last_order) {
+                const orderRows = ordersTable.querySelectorAll('tr.order-row');
+                orderRows.forEach(row => {
+                    const orderNum = row.cells[0].textContent.trim();
+                    const orderName = row.cells[1].textContent.trim();
+                    const matchStr = `${orderNum} - ${orderName}`;
+                    if (matchStr === eventData.last_order) {
+                        row.classList.add('selected');
+                    } else {
+                        row.classList.remove('selected');
+                    }
+                });
+            }
             
             // 2. Fetch Observations
             const { data: obsData, error: obsError } = await supabase
