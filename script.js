@@ -906,7 +906,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function showToast() {
+    // --- Orders Table Selection ---
+    const orderRows = document.querySelectorAll('.order-row');
+    orderRows.forEach(row => {
+        row.addEventListener('click', () => {
+            orderRows.forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+        });
+    });
+
+    function showToast(message, type = 'success') {
         toast.classList.add('show');
         setTimeout(() => {
             toast.classList.remove('show');
