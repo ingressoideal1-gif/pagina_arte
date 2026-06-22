@@ -245,6 +245,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- File Processing ---
+    function handleFiles(files) {
+        if (files.length === 0) return;
+        currentFiles = Array.from(files);
+        openModal();
+    }
+
+    function getFileTypeFromName(fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image/' + ext;
+        if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) return 'video/' + ext;
+        if (['mp3', 'wav', 'ogg'].includes(ext)) return 'audio/' + ext;
+        if (ext === 'pdf') return 'application/pdf';
+        if (['zip', 'rar', '7z'].includes(ext)) return 'application/zip';
+        if (['txt', 'csv'].includes(ext)) return 'text/plain';
+        return 'application/octet-stream';
+    }
+
     function handleFileSelect(files) {
         currentFiles = Array.from(files);
         
@@ -982,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 batchMap[key].files.push({
                     name: file.file_name,
                     size: file.file_size,
-                    type: file.file_name.endsWith('pdf') ? 'application/pdf' : 'image/jpeg',
+                    type: getFileTypeFromName(file.file_name),
                     addedAt: 'Carregado',
                     remoteUrl: file.storage_path // Campo customizado para o createHistoryThumbnail
                 });
