@@ -124,6 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
         attachBlockEvents(firstWindowEl);
     }
 
+    if (window.Sortable) {
+        new Sortable(observationsRoot, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost'
+        });
+    }
+
     // Adiciona nova janela inteira de observação
     window.addNewObservationBlock = function() {
         const newWindow = document.createElement('div');
@@ -133,6 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         newWindow.innerHTML = `
             <div class="block-header" style="display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; background: var(--bg-color); padding: 0.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); gap: 0.5rem;">
+                <div class="drag-handle" title="Arrastar para reordenar" style="cursor: grab; color: var(--text-muted); padding: 0 0.2rem;">
+                    <i class="fa-solid fa-grip-vertical"></i>
+                </div>
+                <button type="button" class="btn-toggle-block" title="Minimizar / Expandir Bloco" style="background: transparent; border: none; color: var(--text-color); padding: 0.2rem 0.4rem; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-chevron-up"></i>
+                </button>
                 <div style="flex: 1; min-width: 100px;">
                     <input type="text" class="block-title-input" placeholder="Nome do Bloco (ex: Copos, Pulseiras)" style="width: 100%; font-weight: bold; font-size: 1.05rem; border: none; background: transparent; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.2rem; color: var(--text-color); outline: none;">
                 </div>
@@ -140,9 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="block-actions" style="flex: 0 0 auto; display: flex; gap: 0.5rem;">
                     <button type="button" class="btn-add-block" title="Adicionar Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
                         <i class="fa-solid fa-plus"></i>
-                    </button>
-                    <button type="button" class="btn-toggle-block" title="Minimizar / Expandir Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
-                        <i class="fa-solid fa-chevron-up"></i>
                     </button>
                     <button type="button" class="btn-delete-block" title="Excluir Bloco" style="background: transparent; border: 1px solid var(--border-color); color: var(--danger); padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
                         <i class="fa-solid fa-trash"></i>
