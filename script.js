@@ -597,14 +597,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const header = document.createElement('div');
             header.className = 'history-item-header';
             
-            let statusBadge = batch.isSaved ? `<span style="background: var(--success); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 8px;">Salvo na Nuvem</span>` : '';
-
             const totalBytes = batch.files.reduce((acc, file) => acc + (file.size || 0), 0);
             const totalSizeFormatted = formatBytes(totalBytes);
 
             const headerInfo = document.createElement('div');
             headerInfo.innerHTML = `
-                <span class="history-title"><strong>Lote:</strong> ${batch.title} ${statusBadge}</span><br>
+                <span class="history-title"><strong>Lote:</strong> ${batch.title}</span><br>
                 <span class="history-meta" style="color: var(--text-muted); font-size: 0.85rem;">Obs: ${batch.observation || 'Sem observação'} | <strong>Tamanho:</strong> ${totalSizeFormatted}</span><br>
                 <span class="history-meta" style="color: var(--primary); font-size: 0.8rem; margin-top: 2px; display: inline-block;"><i class="fa-regular fa-clock"></i> Criado em: ${batch.timestamp}</span>
             `;
