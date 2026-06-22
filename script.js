@@ -299,10 +299,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 video.src = URL.createObjectURL(file);
                 video.onload = () => URL.revokeObjectURL(video.src);
                 thumb.appendChild(video);
+            } else if (fileType === 'application/pdf') {
+                const iframe = document.createElement('iframe');
+                iframe.src = URL.createObjectURL(file) + '#toolbar=0&navpanes=0&scrollbar=0';
+                thumb.appendChild(iframe);
             } else {
                 let iconClass = 'fa-file';
                 if (fileType.startsWith('audio/')) iconClass = 'fa-file-audio';
-                else if (fileType === 'application/pdf') iconClass = 'fa-file-pdf';
                 else if (fileType.includes('text') || file.name.endsWith('.txt')) iconClass = 'fa-file-lines';
                 else if (file.name.endsWith('.zip') || file.name.endsWith('.rar')) iconClass = 'fa-file-zipper';
                 else if (file.name.endsWith('.csv') || file.name.endsWith('.xlsx')) iconClass = 'fa-file-excel';
@@ -712,10 +715,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const video = document.createElement('video');
             video.src = fileUrl;
             thumb.appendChild(video);
+        } else if (fileType === 'application/pdf') {
+            const iframe = document.createElement('iframe');
+            iframe.src = fileUrl + '#toolbar=0&navpanes=0&scrollbar=0';
+            thumb.appendChild(iframe);
         } else {
             let iconClass = 'fa-file';
             if (fileType.startsWith('audio/')) iconClass = 'fa-file-audio';
-            else if (fileType === 'application/pdf') iconClass = 'fa-file-pdf';
             else if (fileType.includes('text') || file.name.endsWith('.txt')) iconClass = 'fa-file-lines';
             else if (file.name.endsWith('.zip') || file.name.endsWith('.rar')) iconClass = 'fa-file-zipper';
             else if (file.name.endsWith('.csv') || file.name.endsWith('.xlsx')) iconClass = 'fa-file-excel';

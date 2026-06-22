@@ -706,7 +706,7 @@ section h2, section h3 {
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-.preview-thumbnail img, .preview-thumbnail video {
+.preview-thumbnail img, .preview-thumbnail video, .preview-thumbnail iframe {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -714,6 +714,8 @@ section h2, section h3 {
     top: 0;
     left: 0;
     background-color: var(--bg-color);
+    border: none;
+    pointer-events: none;
 }
 
 .preview-thumbnail i {
