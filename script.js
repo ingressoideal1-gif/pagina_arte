@@ -450,8 +450,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Validate basic event fields
-        if (!date || !time || !loc) {
-            alert('Preencha os dados obrigatórios do evento (Data, Hora, Local) antes de salvar!');
+        if (!date || !loc) {
+            alert('Preencha os dados obrigatórios do evento (Data e Local) antes de salvar!');
             return;
         }
 
