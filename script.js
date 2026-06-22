@@ -995,13 +995,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Agrupar arquivos por batch_title + batch_observation
             const batchMap = {};
             filesData.forEach(file => {
+                const dbDate = new Date(file.created_at);
+                const fileAddedAt = dbDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const batchTimestamp = dbDate.toLocaleString();
+
                 const key = `${file.batch_title}|||${file.batch_observation}`;
                 if (!batchMap[key]) {
                     batchMap[key] = {
                         title: file.batch_title,
                         observation: file.batch_observation,
-                        timestamp: 'Carregado do Banco',
-                        files: []
+                        timestamp: batchTimestamp,
+                        files: [],
+                        isSaved: true
                     };
                 }
                 // Convertendo file row para o objeto de arquivo que a UI espera (sem URL local, usamos a URL do Supabase para preview)
@@ -1009,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     name: file.file_name,
                     size: file.file_size,
                     type: getFileTypeFromName(file.file_name),
-                    addedAt: 'Carregado',
+                    addedAt: fileAddedAt,
                     remoteUrl: file.storage_path // Campo customizado para o createHistoryThumbnail
                 });
             });
