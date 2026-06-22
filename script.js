@@ -618,6 +618,88 @@ document.addEventListener('DOMContentLoaded', () => {
             btnDownloadZip.innerHTML = `<i class="fa-solid fa-download"></i> Baixar Lote`;
             btnDownloadZip.onclick = () => downloadBatchZip(batch, batch.isSaved);
 
+            const btnEditBatch = document.createElement('button');
+            btnEditBatch.className = 'btn-edit-batch';
+            btnEditBatch.innerHTML = `<i class="fa-solid fa-pen"></i>`;
+            btnEditBatch.title = "Editar Nome e Observação";
+            btnEditBatch.style.background = 'transparent';
+            btnEditBatch.style.border = '1px solid var(--border-color)';
+            btnEditBatch.style.color = 'var(--text-color)';
+            btnEditBatch.style.padding = '0.4rem 0.6rem';
+            btnEditBatch.style.borderRadius = 'var(--radius-sm)';
+            btnEditBatch.style.cursor = 'pointer';
+
+            btnEditBatch.onclick = () => {
+                headerInfo.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; min-width: 250px;">
+                        <input type="text" id="edit-title-${b}" value="${batch.title.replace(/"/g, '&quot;')}" style="padding: 0.4rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-weight: bold; background: var(--bg-color); color: var(--text-color);">
+                        <textarea id="edit-obs-${b}" rows="2" style="padding: 0.4rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.85rem; resize: vertical; background: var(--bg-color); color: var(--text-color);">${batch.observation}</textarea>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button id="btn-save-edit-${b}" style="background: var(--primary); color: white; padding: 0.3rem 0.6rem; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Salvar</button>
+                            <button id="btn-cancel-edit-${b}" style="background: var(--border-color); color: var(--text-color); padding: 0.3rem 0.6rem; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem;">Cancelar</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById(`btn-cancel-edit-${b}`).onclick = () => renderHistory();
+                
+                document.getElementById(`btn-save-edit-${b}`).onclick = async () => {
+                    const newTitle = document.getElementById(`edit-title-${b}`).value.trim();
+                    const newObs = document.getElementById(`edit-obs-${b}`).value.trim();
+                    
+                    if (!newTitle) {
+                        alert('O título não pode ser vazio.');
+                        return;
+                    }
+                    
+                    const oldTitle = batch.title;
+                    const oldObs = batch.observation;
+                    
+                    if (newTitle === oldTitle && newObs === oldObs) {
+                        renderHistory();
+                        return;
+                    }
+                    
+                    if (batch.isSaved) {
+                        document.getElementById(`btn-save-edit-${b}`).innerHTML = 'Salvando...';
+                        document.getElementById(`btn-save-edit-${b}`).disabled = true;
+                        
+                        try {
+                            const { error } = await supabase
+                                .from('app_upload_files')
+                                .update({ batch_title: newTitle, batch_observation: newObs })
+                                .eq('event_id', currentEditingEventId)
+                                .eq('batch_title', oldTitle)
+                                .eq('batch_observation', oldObs);
+                                
+                            if (error) throw error;
+                            
+                            // Update locally
+                            const realIndex = savedBatches.findIndex(sb => sb.title === oldTitle && sb.observation === oldObs);
+                            if (realIndex > -1) {
+                                savedBatches[realIndex].title = newTitle;
+                                savedBatches[realIndex].observation = newObs;
+                            }
+                            showToast('Lote renomeado com sucesso!', 'success');
+                            renderHistory();
+                        } catch (err) {
+                            console.error(err);
+                            alert("Erro ao renomear: " + err.message);
+                            renderHistory();
+                        }
+                    } else {
+                        // É local
+                        const realIndex = stagedBatches.indexOf(batch);
+                        if (realIndex > -1) {
+                            stagedBatches[realIndex].title = newTitle;
+                            stagedBatches[realIndex].observation = newObs;
+                        }
+                        renderHistory();
+                    }
+                };
+            };
+
+            btnGroup.appendChild(btnEditBatch);
             btnGroup.appendChild(btnDownloadZip);
 
             // Apenas botões de edição se o lote NÃO estiver salvo
